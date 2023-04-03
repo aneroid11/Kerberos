@@ -1,12 +1,29 @@
-from bitarray import bitarray
+# from bitarray import bitarray
 
 
 class Des:
     def __init__(self, plain_message: str, key: bytearray):
         self._plain_data = bytearray(plain_message, "utf-8")
         self._key = key
+        self._key_bits = []
+
+        self._key_to_key_bits()
         # print(key.hex())
         self._encrypted_data = bytearray()
+
+    def _access_bit(self, data: bytearray, num: int):
+        base = int(num // 8)
+        shift = int(num % 8)
+
+        # return (data[base] << shift) & 0x80
+        return (((data[base] << shift) % 256) & 0x80) >> 7
+
+    def _key_to_key_bits(self):
+        for i in range(64):
+            bit = self._access_bit(self._key, i)
+            self._key_bits.append(bit)
+            print(bit, end="")
+        print()
 
     def _append_zeros_to_plain_data(self):
         plain_data_len = len(self._plain_data)
