@@ -33,9 +33,6 @@ class Des:
         self._keys_48 = []
         self._create_16_keys_from_cds()
 
-        for key in self._keys_48:
-            print(key)
-
         self._encrypted_data = bytearray()
 
     def _access_bit(self, data: bytearray, num: int):
