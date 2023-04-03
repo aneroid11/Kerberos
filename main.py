@@ -2,8 +2,9 @@ from des import Des
 
 
 def main():
-    encryptor = Des()
-    print(encryptor.encrypt("55"))
+    key = 0x133457799BBCDFF1
+    encryptor = Des("55", bytearray(key.to_bytes(8, "big")))  # BIG, not little
+    print(encryptor.encrypt())
     # print(encryptor.decrypt(encryptor.encrypt("55")))
 
 

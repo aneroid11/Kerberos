@@ -1,8 +1,11 @@
+from bitarray import bitarray
+
+
 class Des:
     def __init__(self, plain_message: str, key: bytearray):
-        # self._plain_data = bytearray()
         self._plain_data = bytearray(plain_message, "utf-8")
         self._key = key
+        # print(key.hex())
         self._encrypted_data = bytearray()
 
     def _append_zeros_to_plain_data(self):
