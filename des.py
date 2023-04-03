@@ -28,12 +28,13 @@ class Des:
         self._key_initial_permutation()
         self._key_c = [self._key_bits_56[0:28]]
         self._key_d = [self._key_bits_56[28:56]]
-        print(self._key_c[0])
-        print(self._key_d[0])
 
         self._create_key_cds()
-        print(self._key_c[0:17])
-        print(self._key_d[0:17])
+        self._keys_48 = []
+        self._create_16_keys_from_cds()
+
+        for key in self._keys_48:
+            print(key)
 
         self._encrypted_data = bytearray()
 
@@ -64,6 +65,28 @@ class Des:
         for i in range(1, 17):
             self._key_c.append(self._cycle_lshift_bitarray(self._key_c[i - 1], left_shifts[i - 1]))
             self._key_d.append(self._cycle_lshift_bitarray(self._key_d[i - 1], left_shifts[i - 1]))
+
+    def _create_16_keys_from_cds(self):
+        pc_2 = [
+            14, 17, 11, 24, 1, 5,
+            3, 28, 15, 6, 21, 10,
+            23, 19, 12, 4, 26, 8,
+            16, 7, 27, 20, 13, 2,
+            41, 52, 31, 37, 47, 55,
+            30, 40, 51, 45, 33, 48,
+            44, 49, 39, 56, 34, 53,
+            46, 42, 50, 36, 29, 32
+        ]
+        pc_2 = [x - 1 for x in pc_2]
+
+        for i in range(1, 17):
+            curr_key = []
+            key_before_permutation = self._key_c[i] + self._key_d[i]
+            for j in range(48):
+                curr_key.append(key_before_permutation[pc_2[j]])
+
+            self._keys_48.append(curr_key)
+
 
     def _append_zeros_to_plain_data(self):
         plain_data_len = len(self._plain_data)
