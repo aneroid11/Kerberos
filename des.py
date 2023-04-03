@@ -26,8 +26,15 @@ class Des:
 
         self._key_to_key_bits()
         self._key_initial_permutation()
-        print(self._key_bits_56)
-        # print(key.hex())
+        self._key_c = [self._key_bits_56[0:28]]
+        self._key_d = [self._key_bits_56[28:56]]
+        print(self._key_c[0])
+        print(self._key_d[0])
+
+        self._create_key_cds()
+        print(self._key_c[0:17])
+        print(self._key_d[0:17])
+
         self._encrypted_data = bytearray()
 
     def _access_bit(self, data: bytearray, num: int):
@@ -47,6 +54,16 @@ class Des:
     def _key_initial_permutation(self):
         for i in range(56):
             self._key_bits_56.append(self._key_bits[self._pc_1[i]])
+
+    def _cycle_lshift_bitarray(self, arr: list, num: int) -> list:
+        return arr[num:] + arr[:num]
+
+    def _create_key_cds(self):
+        left_shifts = (1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1)
+
+        for i in range(1, 17):
+            self._key_c.append(self._cycle_lshift_bitarray(self._key_c[i - 1], left_shifts[i - 1]))
+            self._key_d.append(self._cycle_lshift_bitarray(self._key_d[i - 1], left_shifts[i - 1]))
 
     def _append_zeros_to_plain_data(self):
         plain_data_len = len(self._plain_data)
