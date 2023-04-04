@@ -3,14 +3,15 @@ import sys
 from time import time
 import common
 from udp_web_node import UDPWebNode
-from hashlib import sha256
 from des import Des
+
+
+tgs_secret_key = common.gen_key()  # distributed between AuthServer and TicketGrantingServer
 
 
 class AuthServer(UDPWebNode):
     def __init__(self):
         super().__init__()
-        self._tgs_secret_key = common.gen_key()
         self._login_str = None
 
         self._sock.bind(('', common.AUTH_SERVER_PORT))
@@ -34,7 +35,7 @@ class AuthServer(UDPWebNode):
     def send_ticket_granting_ticket(self):
         tgs_session_key = common.gen_key()
 
-        # such client exists
+        # TGT
         first_message = {
             "name": self._login_str,
             "tgs_name": "TicketGrantingServer",
@@ -43,7 +44,7 @@ class AuthServer(UDPWebNode):
             "tgs_session_key": common.bytes_to_string(tgs_session_key)
         }
         first_message_str = json.dumps(first_message)
-        tgs_secret_key_encryptor = Des(bytearray(self._tgs_secret_key))
+        tgs_secret_key_encryptor = Des(bytearray(tgs_secret_key))
         first_message_str_encr = tgs_secret_key_encryptor.encrypt(bytearray(first_message_str, "utf-8"))
         self._send_bytes(first_message_str_encr, common.CLIENT_PORT)
 
@@ -64,7 +65,22 @@ class TicketGrantingServer(UDPWebNode):
         super().__init__()
         self._sock.bind(('', common.TICKET_GRANTING_SERVER_PORT))
 
+        self._services = (
+            "ServerService",
+            "ServerService1"
+        )
+
     def recv_auth_and_tgt(self):
         data, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         data_dict = json.loads(data.decode("utf-8"))
-        print(data_dict)
+        # print(data_dict)
+        requested_service = data_dict["service_id"]
+
+        if requested_service not in self._services:
+            print(f"TGT: No such service: {requested_service}!")
+            exit(1)
+
+        tgt_encrypted = common.string_to_bytes(data_dict["ticket_granting_ticket"])
+        encryptor = Des(bytearray(tgs_secret_key))
+        tgt_decrypted = encryptor.encrypt(bytearray(tgt_encrypted), True).decode("utf-8")
+        print(tgt_decrypted)
