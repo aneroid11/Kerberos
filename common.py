@@ -1,5 +1,6 @@
 import random
 import base64
+from hashlib import sha256
 
 
 SERVER_SERVICE_PORT = 50000
@@ -10,14 +11,17 @@ CLIENT_PORT = 50003
 MAX_DATA_LEN = 1024
 
 
+def sha256hash(string: str) -> bytes:
+    return sha256(string.encode("utf-8")).digest()
+
+
 def gen_key() -> bytes:
     key = random.randint(0, 9223372036854775807)
     return key.to_bytes(8, "big")
 
 
 def bytes_to_string(b: bytes) -> str:
-    encoded = base64.b64encode(b)
-    return encoded.decode("ascii")
+    return base64.b64encode(b).decode("ascii")
 
 
 def string_to_bytes(s: str) -> bytes:

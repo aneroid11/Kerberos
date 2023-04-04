@@ -11,14 +11,15 @@ class AuthServer(UDPWebNode):
     def __init__(self):
         super().__init__()
         self._tgs_secret_key = common.gen_key()
+        # self._tgs_secret_key = 0x133457799BBCDFF1.to_bytes(8, "big")
         self._login_str = None
 
         self._sock.bind(('', common.AUTH_SERVER_PORT))
 
         self._clients = {
-            "Anton": sha256("123".encode("utf-8")).digest(),
-            "Maxim": sha256("1234".encode("utf-8")).digest(),
-            "Alexander": sha256("12345".encode("utf-8")).digest()
+            "Anton": common.sha256hash("123"),
+            "Maxim": common.sha256hash("1234"),
+            "Alexander": common.sha256hash("12345")
         }
 
     def receive_client_login(self):
@@ -46,6 +47,17 @@ class AuthServer(UDPWebNode):
         tgs_secret_key_encryptor = Des(bytearray(self._tgs_secret_key))
         first_message_str_encr = tgs_secret_key_encryptor.encrypt(bytearray(first_message_str, "utf-8"))
         self._send_bytes(first_message_str_encr, common.CLIENT_PORT)
+
+        second_message = {
+            "tgs_name": "TicketGrantingServer",
+            "tgs_session_key": common.bytes_to_string(tgs_session_key)
+        }
+        second_message_str = json.dumps(second_message)
+        client_secret_key_encryptor = Des(bytearray(self._clients[self._login_str][0:8]))
+        self._send_bytes(
+            client_secret_key_encryptor.encrypt(bytearray(second_message_str, "utf-8")),
+            common.CLIENT_PORT
+        )
 
 
 class TicketGrantingServer(UDPWebNode):
