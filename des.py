@@ -119,7 +119,7 @@ class Des:
         ret = [data[selection_table[i] - 1] for i in range(48)]
         return ret
 
-    def bitlist_to_num(self, bitlist: list) -> int:
+    def _bitlist_to_num(self, bitlist: list) -> int:
         length = len(bitlist)
         out = 0
 
@@ -128,7 +128,7 @@ class Des:
 
         return out
 
-    def num_to_bitlist(self, num: int) -> list:
+    def _num_to_bitlist(self, num: int) -> list:
         # & with 0x1 will give us the last bit value
         out = []
 
@@ -137,7 +137,7 @@ class Des:
             num = num >> 1
         return out
 
-    def _calculate_s_box(self, i: int, curr_group: list) -> list:
+    def _calculate_s_box(self, index: int, curr_group: list) -> list:
         s_list = [
             [
                 [14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
@@ -190,13 +190,21 @@ class Des:
         ]
 
         i = self._bitlist_to_num([curr_group[0], curr_group[5]])
-        j = self._bitlist_to_num([curr_group[1:5]])
-
+        j = self._bitlist_to_num(curr_group[1:5])
+        return self._num_to_bitlist(s_list[index][i][j])
 
     def _calculate_f(self, data: list, key: list) -> list:
         data_expanded = self._calculate_e(data)
         xored = self._xor_bitlist(data_expanded, key)
-        print(xored)
+        s_boxed = []
+
+        for i in range(8):
+            start = i * 6
+            end = start + 8
+            s_boxed += self._calculate_s_box(i, xored[start:end])
+
+        print(s_boxed)
+
         return xored
 
     def _xor_bitlist(self, l0: list, l1: list) -> list:
