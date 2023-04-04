@@ -8,6 +8,8 @@ from des import Des
 class ServerService(UDPWebNode):
     def __init__(self):
         super().__init__()
+        self._service_session_key = None
+        self._auth2_timestamp = None
         self._service_secret_key = None
         self._sock.bind(('', common.SERVER_SERVICE_PORT))
 
@@ -26,8 +28,8 @@ class ServerService(UDPWebNode):
         ticket_dict = json.loads(ticket_decrypted)
         print(ticket_dict)
 
-        service_session_key = common.string_to_bytes(ticket_dict["service_session_key"])
-        encryptor = Des(bytearray(service_session_key))
+        self._service_session_key = common.string_to_bytes(ticket_dict["service_session_key"])
+        encryptor = Des(bytearray(self._service_session_key))
         auth2_decrypted = common.delete_trailing_zeros(encryptor.encrypt(bytearray(auth2_encrypted),
                                                                          True)).decode("utf-8")
         auth2_dict = json.loads(auth2_decrypted)
@@ -43,4 +45,12 @@ class ServerService(UDPWebNode):
             print("SS: The TGS has expired!")
             exit(1)
 
+        self._auth2_timestamp = auth2_dict["timestamp"]
         print(f"SS: CLIENT {auth2_dict['client_id']} AUTHENTICATED")
+
+    def send_modificated_time_to_client(self):
+        encryptor = Des(bytearray(self._service_session_key))
+        timestamp_encrypted = encryptor.encrypt(
+            bytearray(str(self._auth2_timestamp + 1).encode("utf-8"))
+        )
+        self._send_bytes(timestamp_encrypted, common.CLIENT_PORT)

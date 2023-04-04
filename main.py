@@ -39,6 +39,9 @@ def main():
     client.send_auth_and_service_ticket_to_service()
     server_service.recv_auth_and_service_ticket()
 
+    server_service.send_modificated_time_to_client()
+    client.recv_modificated_time()
+
 
 if __name__ == '__main__':
     main()

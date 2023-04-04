@@ -10,6 +10,7 @@ from des import Des
 class Client(UDPWebNode):
     def __init__(self):
         super().__init__()
+        self._auth2_timestamp = None
         self._service_session_key = None
         self._service_ticket_encrypted = None
         self._tgs_session_key = None
@@ -72,9 +73,10 @@ class Client(UDPWebNode):
 
     def send_auth_and_service_ticket_to_service(self):
         # self._send_string("hello", common.SERVER_SERVICE_PORT)
+        self._auth2_timestamp = time.time()
         auth2 = {
             "client_id": self._login,
-            "timestamp": time.time()
+            "timestamp": self._auth2_timestamp
         }
         encryptor = Des(bytearray(self._service_session_key))
         auth2_encrypted = encryptor.encrypt(bytearray(json.dumps(auth2), "utf-8"))
@@ -84,3 +86,21 @@ class Client(UDPWebNode):
             "service_ticket": common.bytes_to_string(self._service_ticket_encrypted)
         }
         self._send_string(json.dumps(msg), common.SERVER_SERVICE_PORT)
+
+    def recv_modificated_time(self):
+        timestamp_encrypted, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
+        encryptor = Des(bytearray(self._service_session_key))
+        timestamp_decrypted_bytes = encryptor.encrypt(bytearray(timestamp_encrypted), True)
+        timestamp_decrypted_str = common.delete_trailing_zeros(timestamp_decrypted_bytes).decode("utf-8")
+
+        try:
+            timestamp_decrypted_float = float(timestamp_decrypted_str)
+            if timestamp_decrypted_float != self._auth2_timestamp + 1:
+                print("C: Server service is not authentic!")
+                exit(1)
+
+        except Exception:
+            print("C: Server service is not authentic!")
+            exit(1)
+
+        print("C: SERVER SERVICE AUTHENTICATED!")
