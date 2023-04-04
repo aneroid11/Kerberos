@@ -26,19 +26,13 @@ class Client(UDPWebNode):
         password = input("Enter your password: ")
         client_secret_key = bytearray(common.sha256hash(password)[0:8])
         encryptor = Des(client_secret_key)
-        second_msg_decr = encryptor.encrypt(bytearray(second_message), True)
-        print(second_msg_decr)
-
-        print(json.loads('{"tgs_name": "TicketGrantingServer", "tgs_session_key": "YotoXjUgMpI="}'))
+        second_msg_decr = common.delete_trailing_zeros(encryptor.encrypt(bytearray(second_message), True))
 
         try:
-            # second_data = json.loads(second_msg_decr.decode("utf-8"))
             second_data_str = second_msg_decr.decode("utf-8")
-            print(second_data_str)
             second_data = json.loads(second_data_str)
         except Exception as e:
             print("Password is incorrect!")
-            print(e)
             sys.exit(1)
 
         print(second_data)

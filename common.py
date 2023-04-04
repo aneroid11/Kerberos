@@ -11,6 +11,10 @@ CLIENT_PORT = 50003
 MAX_DATA_LEN = 1024
 
 
+def delete_trailing_zeros(data: bytes) -> bytes:
+    return data.rstrip(bytes('\x00', 'utf-8'))
+
+
 def sha256hash(string: str) -> bytes:
     return sha256(string.encode("utf-8")).digest()
 
