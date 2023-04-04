@@ -103,11 +103,28 @@ class Des:
         perm_bits = [curr_block_bits[ip[i]] for i in range(64)]
         return perm_bits
 
+    def _calculate_f(self, data: list, key: list) -> list:
+        return data
+
+    def _xor_bitlist(self, l0: list, l1: list) -> list:
+        size = len(l0)
+        return [l0[i] ^ l1[i] for i in range(size)]
 
     def _encrypt_block(self, curr_block: bytearray) -> bytearray:
+        print(self._xor_bitlist([1, 0, 0, 0], [1, 1, 0, 0]))
+
         curr_block_bits = [self._access_bit(curr_block, i) for i in range(64)]
         initial_permutation = self._msg_initial_permutation(curr_block_bits)
         print(initial_permutation)
+
+        l = [initial_permutation[0:32]]
+        r = [initial_permutation[32:64]]
+
+        for i in range(1, 17):
+            li = r[i - 1]
+            ri = self._xor_bitlist(l[i - 1], self._calculate_f(r[i - 1], self._keys_48[i - 1]))
+            l.append(li)
+            r.append(ri)
 
         return curr_block
 
