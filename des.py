@@ -1,21 +1,5 @@
 class Des:
-    def _correct_pc_1(self):
-        for i in range(len(self._pc_1)):
-            self._pc_1[i] -= 1
-
     def __init__(self, key: bytearray):
-        self._pc_1 = [
-            57, 49, 41, 33, 25, 17, 9,
-            1, 58, 50, 42, 34, 26, 18,
-            10, 2, 59, 51, 43, 35, 27,
-            19, 11, 3, 60, 52, 44, 36,
-            63, 55, 47, 39, 31, 23, 15,
-            7, 62, 54, 46, 38, 30, 22,
-            14, 6, 61, 53, 45, 37, 29,
-            21, 13, 5, 28, 20, 12, 4
-        ]
-        self._correct_pc_1()
-
         self._key = key
         self._key_bits = []
         self._key_bits_56 = []
@@ -44,8 +28,19 @@ class Des:
             self._key_bits.append(bit)
 
     def _key_initial_permutation(self):
+        pc_1 = [
+            57, 49, 41, 33, 25, 17, 9,
+            1, 58, 50, 42, 34, 26, 18,
+            10, 2, 59, 51, 43, 35, 27,
+            19, 11, 3, 60, 52, 44, 36,
+            63, 55, 47, 39, 31, 23, 15,
+            7, 62, 54, 46, 38, 30, 22,
+            14, 6, 61, 53, 45, 37, 29,
+            21, 13, 5, 28, 20, 12, 4
+        ]
+
         for i in range(56):
-            self._key_bits_56.append(self._key_bits[self._pc_1[i]])
+            self._key_bits_56.append(self._key_bits[pc_1[i] - 1])
 
     def _cycle_lshift_bitarray(self, arr: list, num: int) -> list:
         return arr[num:] + arr[:num]
@@ -77,7 +72,6 @@ class Des:
                 curr_key.append(key_before_permutation[pc_2[j]])
 
             self._keys_48.append(curr_key)
-
 
     def _append_zeros_to_plain_data(self, plain_data: bytearray):
         plain_data_len = len(plain_data)
@@ -120,7 +114,6 @@ class Des:
         return ret
 
     def _bitlist_to_num(self, bitlist: list) -> int:
-        length = len(bitlist)
         out = 0
 
         for bit in bitlist:
@@ -261,11 +254,9 @@ class Des:
         return bytearray(curr_block_encr_num.to_bytes(8, "big"))
 
     def encrypt(self, plain_data: bytearray, decrypt=False) -> bytearray:
-        # plain_data = bytearray(plain_message, "utf-8")
         encrypted_data = bytearray()
         self._append_zeros_to_plain_data(plain_data)
 
-        # now we need to cipher it block by block (block size == 64 bit == 8 bytes)
         num_on_blocks = int(len(plain_data) / 8)
         for i in range(num_on_blocks):
             block_start = i * 8
@@ -273,5 +264,4 @@ class Des:
             curr_block = plain_data[block_start:block_end]
             encrypted_data += self._encrypt_block(curr_block, decrypt)
 
-        print()
         return encrypted_data
