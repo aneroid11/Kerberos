@@ -226,7 +226,7 @@ class Des:
         size = len(l0)
         return [l0[i] ^ l1[i] for i in range(size)]
 
-    def _encrypt_block(self, curr_block: bytearray) -> bytearray:
+    def _encrypt_block(self, curr_block: bytearray, decrypt=False) -> bytearray:
         curr_block_bits = [self._access_bit(curr_block, i) for i in range(64)]
         initial_permutation = self._msg_initial_permutation(curr_block_bits)
 
@@ -236,7 +236,8 @@ class Des:
         curr_l = []
         curr_r = []
 
-        for i in range(16):
+        for_range = range(16) if not decrypt else reversed(range(16))
+        for i in for_range:
             curr_l = prev_r
             curr_r = self._xor_bitlist(prev_l, self._calculate_f(prev_r, self._keys_48[i]))
             prev_l = curr_l
@@ -259,7 +260,7 @@ class Des:
         curr_block_encr_num = self._bitlist_to_num(curr_block_encrypted)
         return bytearray(curr_block_encr_num.to_bytes(8, "big"))
 
-    def encrypt(self, plain_data: bytearray) -> bytearray:
+    def encrypt(self, plain_data: bytearray, decrypt=False) -> bytearray:
         # plain_data = bytearray(plain_message, "utf-8")
         encrypted_data = bytearray()
         self._append_zeros_to_plain_data(plain_data)
@@ -270,7 +271,7 @@ class Des:
             block_start = i * 8
             block_end = block_start + 8
             curr_block = plain_data[block_start:block_end]
-            encrypted_data += self._encrypt_block(curr_block)
+            encrypted_data += self._encrypt_block(curr_block, decrypt)
 
         print()
         return encrypted_data
