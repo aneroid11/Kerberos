@@ -10,6 +10,8 @@ from des import Des
 class Client(UDPWebNode):
     def __init__(self):
         super().__init__()
+        self._service_session_key = None
+        self._service_ticket_encrypted = None
         self._tgs_session_key = None
         self._ticket_granting_ticket = None
         self._sock.bind(('', common.CLIENT_PORT))
@@ -56,7 +58,7 @@ class Client(UDPWebNode):
         self._send_string(json.dumps(data), common.TICKET_GRANTING_SERVER_PORT)
 
     def recv_service_ticket_and_session_key(self):
-        service_ticket_encrypted, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
+        self._service_ticket_encrypted, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         msg2_encrypted, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
 
         encryptor = Des(bytearray(self._tgs_session_key))
@@ -65,4 +67,20 @@ class Client(UDPWebNode):
             True
         )).decode("utf-8")
         msg2_dict = json.loads(msg2_decrypted)
-        print(msg2_dict)
+        # print(msg2_dict)
+        self._service_session_key = common.string_to_bytes(msg2_dict["service_session_key"])
+
+    def send_auth_and_service_ticket_to_service(self):
+        # self._send_string("hello", common.SERVER_SERVICE_PORT)
+        auth2 = {
+            "client_id": self._login,
+            "timestamp": time.time()
+        }
+        encryptor = Des(bytearray(self._service_session_key))
+        auth2_encrypted = encryptor.encrypt(bytearray(json.dumps(auth2), "utf-8"))
+
+        msg = {
+            "auth2": common.bytes_to_string(auth2_encrypted),
+            "service_ticket": common.bytes_to_string(self._service_ticket_encrypted)
+        }
+        self._send_string(json.dumps(msg), common.SERVER_SERVICE_PORT)

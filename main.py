@@ -20,6 +20,7 @@ def main():
     client = Client()
     auth_server = AuthServer()
     ticket_granting_server = TicketGrantingServer()
+    server_service = ServerService()
 
     client.send_msg_to_auth_server()
     auth_server.receive_client_login()
@@ -32,6 +33,9 @@ def main():
 
     ticket_granting_server.send_service_ticket_and_session_key_to_client()
     client.recv_service_ticket_and_session_key()
+
+    client.send_auth_and_service_ticket_to_service()
+    server_service.recv_auth_and_service_ticket()
 
 
 if __name__ == '__main__':
