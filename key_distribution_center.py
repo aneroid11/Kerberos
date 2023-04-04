@@ -73,11 +73,10 @@ class TicketGrantingServer(UDPWebNode):
     def recv_auth_and_tgt(self):
         data, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         data_dict = json.loads(data.decode("utf-8"))
-        # print(data_dict)
         requested_service = data_dict["service_id"]
 
         if requested_service not in self._services:
-            print(f"TGT: No such service: {requested_service}!")
+            print(f"TGS: No such service: {requested_service}!")
             exit(1)
 
         tgt_encrypted = common.string_to_bytes(data_dict["ticket_granting_ticket"])
@@ -90,4 +89,17 @@ class TicketGrantingServer(UDPWebNode):
         auth1 = common.string_to_bytes(data_dict["auth1"])
         encryptor = Des(bytearray(tgs_session_key))
         auth1_decrypted = common.delete_trailing_zeros(encryptor.encrypt(bytearray(auth1), True)).decode("utf-8")
-        print(auth1_decrypted)
+        auth1_decrypted_dict = json.loads(auth1_decrypted)
+
+        print(tgt_decrypted_dict)
+        print(auth1_decrypted_dict)
+
+        if tgt_decrypted_dict["name"] != auth1_decrypted_dict["client_id"]:
+            print("TGS: Client names in TGT and auth1 do not match!")
+            exit(1)
+        if auth1_decrypted_dict["timestamp"] - tgt_decrypted_dict["timestamp"] > 120.0:
+            print("TGS: The timestamps of auth1 and TGT differ by more than two minutes!")
+            exit(1)
+        if tgt_decrypted_dict["timestamp"] + tgt_decrypted_dict["lifetime"] < time():
+            print("TGS: The TGT has expired!")
+            exit(1)
