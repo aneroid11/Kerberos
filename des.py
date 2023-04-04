@@ -111,20 +111,28 @@ class Des:
         return [l0[i] ^ l1[i] for i in range(size)]
 
     def _encrypt_block(self, curr_block: bytearray) -> bytearray:
-        print(self._xor_bitlist([1, 0, 0, 0], [1, 1, 0, 0]))
-
         curr_block_bits = [self._access_bit(curr_block, i) for i in range(64)]
         initial_permutation = self._msg_initial_permutation(curr_block_bits)
-        print(initial_permutation)
 
-        l = [initial_permutation[0:32]]
-        r = [initial_permutation[32:64]]
+        prev_l = initial_permutation[0:32]
+        prev_r = initial_permutation[32:64]
 
-        for i in range(1, 17):
-            li = r[i - 1]
-            ri = self._xor_bitlist(l[i - 1], self._calculate_f(r[i - 1], self._keys_48[i - 1]))
-            l.append(li)
-            r.append(ri)
+        curr_l = []
+        curr_r = []
+
+        for i in range(16):
+            curr_l = prev_r
+            curr_r = self._xor_bitlist(prev_l, self._calculate_f(prev_r, self._keys_48[i]))
+            prev_l = curr_l
+            prev_r = curr_r
+
+        print(curr_l)
+        print(curr_r)
+        # for i in range(1, 17):
+        #     li = r[i - 1]
+        #     ri = self._xor_bitlist(l[i - 1], self._calculate_f(r[i - 1], self._keys_48[i - 1]))
+        #     l.append(li)
+        #     r.append(ri)
 
         return curr_block
 
