@@ -74,6 +74,9 @@ class TicketGrantingServer(UDPWebNode):
             "ServerService1"
         )
 
+    def send_service_secret_key_to_server_service(self):
+        self._send_bytes(self._service_secret_key, common.SERVER_SERVICE_PORT)
+
     def recv_auth_and_tgt(self):
         data, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         data_dict = json.loads(data.decode("utf-8"))

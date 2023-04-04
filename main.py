@@ -21,6 +21,8 @@ def main():
     auth_server = AuthServer()
     ticket_granting_server = TicketGrantingServer()
     server_service = ServerService()
+    ticket_granting_server.send_service_secret_key_to_server_service()
+    server_service.recv_service_secret_key()
 
     client.send_msg_to_auth_server()
     auth_server.receive_client_login()
