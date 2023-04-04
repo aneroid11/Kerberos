@@ -19,11 +19,16 @@ def main():
 
     client = Client()
     auth_server = AuthServer()
+    ticket_granting_server = TicketGrantingServer()
 
     client.send_msg_to_auth_server()
     auth_server.receive_client_login()
+
     auth_server.send_ticket_granting_ticket()
     client.receive_ticket_granting_ticket()
+
+    client.send_auth_and_tgt_to_tgs()
+    ticket_granting_server.recv_auth_and_tgt()
 
 
 if __name__ == '__main__':

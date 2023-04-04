@@ -1,3 +1,5 @@
+import time
+
 import common
 import sys
 import json
@@ -8,20 +10,19 @@ from des import Des
 class Client(UDPWebNode):
     def __init__(self):
         super().__init__()
+        self._tgs_session_key = None
+        self._ticket_granting_ticket = None
         self._sock.bind(('', common.CLIENT_PORT))
 
+        self._login = None
+
     def send_msg_to_auth_server(self):
-        login = input("Enter your login: ")
+        self._login = input("Enter your login: ")
         print("sending login to AS...")
-        self._send_string(login, common.AUTH_SERVER_PORT)
+        self._send_string(self._login, common.AUTH_SERVER_PORT)
 
     def receive_ticket_granting_ticket(self):
-        # data, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
-        # key = 0x133457799BBCDFF1.to_bytes(8, "big")
-        # encryptor = Des(bytearray(key))
-        # data_decrypted = encryptor.encrypt(bytearray(data), True).decode("utf-8")
-        # print(data_decrypted)
-        first_message, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
+        self._ticket_granting_ticket, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         second_message, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         password = input("Enter your password: ")
         client_secret_key = bytearray(common.sha256hash(password)[0:8])
@@ -36,3 +37,20 @@ class Client(UDPWebNode):
             sys.exit(1)
 
         print(second_data)
+        self._tgs_session_key = common.string_to_bytes(second_data["tgs_session_key"])
+
+    def send_auth_and_tgt_to_tgs(self):
+        auth1 = {
+            "client_id": self._login,
+            "timestamp": time.time()
+        }
+        encryptor = Des(bytearray(self._tgs_session_key))
+        auth1_encrypted = encryptor.encrypt(bytearray(json.dumps(auth1).encode("utf-8")))
+
+        data = {
+            "service_id": "ServerService",
+            "ticket_granting_ticket": common.bytes_to_string(self._ticket_granting_ticket),
+            "auth1": common.bytes_to_string(auth1_encrypted)
+        }
+
+        self._send_string(json.dumps(data), common.TICKET_GRANTING_SERVER_PORT)

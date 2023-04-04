@@ -11,7 +11,6 @@ class AuthServer(UDPWebNode):
     def __init__(self):
         super().__init__()
         self._tgs_secret_key = common.gen_key()
-        # self._tgs_secret_key = 0x133457799BBCDFF1.to_bytes(8, "big")
         self._login_str = None
 
         self._sock.bind(('', common.AUTH_SERVER_PORT))
@@ -64,3 +63,8 @@ class TicketGrantingServer(UDPWebNode):
     def __init__(self):
         super().__init__()
         self._sock.bind(('', common.TICKET_GRANTING_SERVER_PORT))
+
+    def recv_auth_and_tgt(self):
+        data, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
+        data_dict = json.loads(data.decode("utf-8"))
+        print(data_dict)
