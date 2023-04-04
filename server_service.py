@@ -1,19 +1,14 @@
 import socket
+import common
+from udp_web_node import UDPWebNode
 
 
-class ServerService:
-    MAX_DATA_LEN = 1024
-
+class ServerService(UDPWebNode):
     def __init__(self):
-        self._sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self._sock.bind(('', 50000))
-
-        print("UDP server up and listening")
-
-    def __del__(self):
-        self._sock.close()
+        super().__init__()
+        self._sock.bind(('', common.SERVER_SERVICE_PORT))
 
     def receive_data(self):
         # blocking call
-        message, addr = self._sock.recvfrom(ServerService.MAX_DATA_LEN)
+        message, addr = self._sock.recvfrom(common.MAX_DATA_LEN)
         print(f"message {message} from {addr}")
