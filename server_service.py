@@ -17,6 +17,8 @@ class ServerService(UDPWebNode):
         self._service_secret_key, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
 
     def recv_auth_and_service_ticket(self):
+        print("SS: Receive auth2 and service ticket")
+
         data, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         data_dict = json.loads(data.decode("utf-8"))
         ticket_encrypted = common.string_to_bytes(data_dict["service_ticket"])
@@ -26,14 +28,12 @@ class ServerService(UDPWebNode):
         ticket_decrypted = common.delete_trailing_zeros(encryptor.encrypt(bytearray(ticket_encrypted), True))\
             .decode("utf-8")
         ticket_dict = json.loads(ticket_decrypted)
-        print(ticket_dict)
 
         self._service_session_key = common.string_to_bytes(ticket_dict["service_session_key"])
         encryptor = Des(bytearray(self._service_session_key))
         auth2_decrypted = common.delete_trailing_zeros(encryptor.encrypt(bytearray(auth2_encrypted),
                                                                          True)).decode("utf-8")
         auth2_dict = json.loads(auth2_decrypted)
-        print(auth2_dict)
 
         if auth2_dict["client_id"] != ticket_dict["client_id"]:
             print("SS: Client ids from auth2 and TGS do not match!")
@@ -49,6 +49,8 @@ class ServerService(UDPWebNode):
         print(f"SS: CLIENT {auth2_dict['client_id']} AUTHENTICATED")
 
     def send_modificated_time_to_client(self):
+        print("SS: Send modificated timestamp to client")
+
         encryptor = Des(bytearray(self._service_session_key))
         timestamp_encrypted = encryptor.encrypt(
             bytearray(str(self._auth2_timestamp + 1).encode("utf-8"))

@@ -33,6 +33,8 @@ class AuthServer(UDPWebNode):
             sys.exit(1)
 
     def send_ticket_granting_ticket(self):
+        print("AS: Send TGT and TGS session key")
+
         tgs_session_key = common.gen_key()
 
         # TGT
@@ -78,6 +80,8 @@ class TicketGrantingServer(UDPWebNode):
         self._send_bytes(self._service_secret_key, common.SERVER_SERVICE_PORT)
 
     def recv_auth_and_tgt(self):
+        print("TGS: Receive auth1 and TGT")
+
         data, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         data_dict = json.loads(data.decode("utf-8"))
         self._requested_service = data_dict["service_id"]
@@ -98,9 +102,6 @@ class TicketGrantingServer(UDPWebNode):
         auth1_decrypted = common.delete_trailing_zeros(encryptor.encrypt(bytearray(auth1), True)).decode("utf-8")
         auth1_decrypted_dict = json.loads(auth1_decrypted)
 
-        print(tgt_decrypted_dict)
-        print(auth1_decrypted_dict)
-
         self._client_id = auth1_decrypted_dict["client_id"]
 
         if tgt_decrypted_dict["name"] != auth1_decrypted_dict["client_id"]:
@@ -114,6 +115,8 @@ class TicketGrantingServer(UDPWebNode):
             exit(1)
 
     def send_service_ticket_and_session_key_to_client(self):
+        print("TGS: Send service ticket and session key to client")
+
         service_session_key = common.gen_key()
         timestamp = time()
 

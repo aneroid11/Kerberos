@@ -20,14 +20,14 @@ class Client(UDPWebNode):
         self._login = None
 
     def send_msg_to_auth_server(self):
-        self._login = input("Enter your login: ")
-        print("sending login to AS...")
+        self._login = input("C: Enter your login: ")
+        print("C: sending login to AS...")
         self._send_string(self._login, common.AUTH_SERVER_PORT)
 
     def receive_ticket_granting_ticket(self):
         self._ticket_granting_ticket, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         second_message, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
-        password = input("Enter your password: ")
+        password = input("C: Enter your password: ")
         client_secret_key = bytearray(common.sha256hash(password)[0:8])
         encryptor = Des(client_secret_key)
         second_msg_decr = common.delete_trailing_zeros(encryptor.encrypt(bytearray(second_message), True))
@@ -39,10 +39,13 @@ class Client(UDPWebNode):
             print("Password is incorrect!")
             sys.exit(1)
 
-        print(second_data)
         self._tgs_session_key = common.string_to_bytes(second_data["tgs_session_key"])
 
+        print("C: Received TGT and TGS session key")
+
     def send_auth_and_tgt_to_tgs(self):
+        print("C: Send auth1 and TGT to TGS")
+
         auth1 = {
             "client_id": self._login,
             "timestamp": time.time()
@@ -59,6 +62,8 @@ class Client(UDPWebNode):
         self._send_string(json.dumps(data), common.TICKET_GRANTING_SERVER_PORT)
 
     def recv_service_ticket_and_session_key(self):
+        print("C: Receive service ticket and session key")
+
         self._service_ticket_encrypted, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         msg2_encrypted, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
 
@@ -72,7 +77,8 @@ class Client(UDPWebNode):
         self._service_session_key = common.string_to_bytes(msg2_dict["service_session_key"])
 
     def send_auth_and_service_ticket_to_service(self):
-        # self._send_string("hello", common.SERVER_SERVICE_PORT)
+        print("C: Send auth2 and service ticket to SS")
+
         self._auth2_timestamp = time.time()
         auth2 = {
             "client_id": self._login,
@@ -88,6 +94,8 @@ class Client(UDPWebNode):
         self._send_string(json.dumps(msg), common.SERVER_SERVICE_PORT)
 
     def recv_modificated_time(self):
+        print("C: Received modificated time")
+
         timestamp_encrypted, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         encryptor = Des(bytearray(self._service_session_key))
         timestamp_decrypted_bytes = encryptor.encrypt(bytearray(timestamp_encrypted), True)
