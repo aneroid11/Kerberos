@@ -82,5 +82,12 @@ class TicketGrantingServer(UDPWebNode):
 
         tgt_encrypted = common.string_to_bytes(data_dict["ticket_granting_ticket"])
         encryptor = Des(bytearray(tgs_secret_key))
-        tgt_decrypted = encryptor.encrypt(bytearray(tgt_encrypted), True).decode("utf-8")
-        print(tgt_decrypted)
+        tgt_decrypted = common.delete_trailing_zeros(encryptor.encrypt(bytearray(tgt_encrypted), True)).decode("utf-8")
+        tgt_decrypted_dict = json.loads(tgt_decrypted)
+
+        tgs_session_key = common.string_to_bytes(tgt_decrypted_dict["tgs_session_key"])
+        # decrypt auth1
+        auth1 = common.string_to_bytes(data_dict["auth1"])
+        encryptor = Des(bytearray(tgs_session_key))
+        auth1_decrypted = common.delete_trailing_zeros(encryptor.encrypt(bytearray(auth1), True)).decode("utf-8")
+        print(auth1_decrypted)
