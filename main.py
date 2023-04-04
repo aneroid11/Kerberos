@@ -4,11 +4,11 @@ from des import Des
 def main():
     key = 0x133457799BBCDFF1
     encryptor = Des(bytearray(key.to_bytes(8, "big")))  # BIG, not little
-    # print("\nRESULT")
     msg = 0x0123456789ABCDEF
-    # print(encryptor.encrypt("55"))
-    print(encryptor.encrypt(bytearray(msg.to_bytes(8, "big"))))
-    # print(encryptor.decrypt(encryptor.encrypt("55")))
+
+    msg_encrypted = encryptor.encrypt(bytearray(msg.to_bytes(8, "big")))
+    msg_encr_num = int.from_bytes(msg_encrypted, "big")
+    print(hex(msg_encr_num))
 
 
 if __name__ == '__main__':

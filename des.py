@@ -242,13 +242,22 @@ class Des:
             prev_l = curr_l
             prev_r = curr_r
 
-        # for i in range(1, 17):
-        #     li = r[i - 1]
-        #     ri = self._xor_bitlist(l[i - 1], self._calculate_f(r[i - 1], self._keys_48[i - 1]))
-        #     l.append(li)
-        #     r.append(ri)
+        ip_1 = [
+            40,     8,   48,    16,    56,   24,    64,   32,
+            39,     7,   47,    15,    55,   23,    63,   31,
+            38,     6,   46,    14,    54,   22,    62,   30,
+            37,     5,   45,    13,    53,   21,    61,   29,
+            36,     4,   44,    12,    52,   20,    60,   28,
+            35,     3,   43,    11,    51,   19,    59,   27,
+            34,     2,   42,    10,    50,   18,    58,   26,
+            33,     1,   41,     9,    49,   17,    57,   25
+        ]
+        ip_1 = [x - 1 for x in ip_1]
+        block_reversed = curr_r + curr_l
+        curr_block_encrypted = [block_reversed[ip_1[i]] for i in range(64)]
 
-        return curr_block
+        curr_block_encr_num = self._bitlist_to_num(curr_block_encrypted)
+        return bytearray(curr_block_encr_num.to_bytes(8, "big"))
 
     def encrypt(self, plain_data: bytearray) -> bytearray:
         # plain_data = bytearray(plain_message, "utf-8")
