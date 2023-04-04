@@ -103,7 +103,23 @@ class Des:
         perm_bits = [curr_block_bits[ip[i]] for i in range(64)]
         return perm_bits
 
+    def _calculate_e(self, data: list) -> list:
+        selection_table = [
+            32, 1, 2, 3, 4, 5,
+            4, 5, 6, 7, 8, 9,
+            8, 9, 10, 11, 12, 13,
+            12, 13, 14, 15, 16, 17,
+            16, 17, 18, 19, 20, 21,
+            20, 21, 22, 23, 24, 25,
+            24, 25, 26, 27, 28, 29,
+            28, 29, 30, 31, 32, 1
+        ]
+        ret = [data[selection_table[i] - 1] for i in range(48)]
+        return ret
+
     def _calculate_f(self, data: list, key: list) -> list:
+        data_expanded = self._calculate_e(data)
+        print(data_expanded)
         return data
 
     def _xor_bitlist(self, l0: list, l1: list) -> list:
@@ -126,8 +142,6 @@ class Des:
             prev_l = curr_l
             prev_r = curr_r
 
-        print(curr_l)
-        print(curr_r)
         # for i in range(1, 17):
         #     li = r[i - 1]
         #     ri = self._xor_bitlist(l[i - 1], self._calculate_f(r[i - 1], self._keys_48[i - 1]))
