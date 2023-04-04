@@ -128,13 +128,17 @@ class Des:
 
         return out
 
-    def _num_to_bitlist(self, num: int) -> list:
-        # & with 0x1 will give us the last bit value
+    def _num_to_bitlist(self, num: int, num_bits=None) -> list:
         out = []
 
-        while num != 0:
-            out.insert(0, num & 0x1)
-            num = num >> 1
+        if num_bits is None:
+            while num != 0:
+                out.insert(0, num & 0x1)
+                num = num >> 1
+        else:
+            for _ in range(num_bits):
+                out.insert(0, num & 0x1)
+                num = num >> 1
         return out
 
     def _calculate_s_box(self, index: int, curr_group: list) -> list:
@@ -191,7 +195,7 @@ class Des:
 
         i = self._bitlist_to_num([curr_group[0], curr_group[5]])
         j = self._bitlist_to_num(curr_group[1:5])
-        return self._num_to_bitlist(s_list[index][i][j])
+        return self._num_to_bitlist(s_list[index][i][j], 4)
 
     def _calculate_f(self, data: list, key: list) -> list:
         data_expanded = self._calculate_e(data)
