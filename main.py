@@ -1,5 +1,6 @@
 from des import Des
 from client import Client
+from key_distribution_center import AuthServer, TicketGrantingServer
 from server_service import ServerService
 
 
@@ -12,12 +13,12 @@ def main():
     # print(msg_encrypted)
     # msg_decrypted = encryptor.encrypt(msg_encrypted, True)
     # print(msg_decrypted)
-    server_service = ServerService()
+
     client = Client()
+    auth_server = AuthServer()
 
-    client.send_data()
-    server_service.receive_data()
-
+    client.send_msg_to_auth_server()
+    auth_server.receive_client_login()
 
 if __name__ == '__main__':
     main()
