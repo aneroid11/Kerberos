@@ -54,3 +54,7 @@ class Client(UDPWebNode):
         }
 
         self._send_string(json.dumps(data), common.TICKET_GRANTING_SERVER_PORT)
+
+    def recv_service_ticket_and_session_key(self):
+        data, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
+        # print(data)

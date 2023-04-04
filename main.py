@@ -30,6 +30,9 @@ def main():
     client.send_auth_and_tgt_to_tgs()
     ticket_granting_server.recv_auth_and_tgt()
 
+    ticket_granting_server.send_service_ticket_and_session_key_to_client()
+    client.recv_service_ticket_and_session_key()
+
 
 if __name__ == '__main__':
     main()

@@ -63,6 +63,10 @@ class AuthServer(UDPWebNode):
 class TicketGrantingServer(UDPWebNode):
     def __init__(self):
         super().__init__()
+        self._tgs_session_key = None
+        self._service_secret_key = common.gen_key()
+        self._requested_service = None
+        self._client_id = None
         self._sock.bind(('', common.TICKET_GRANTING_SERVER_PORT))
 
         self._services = (
@@ -73,10 +77,10 @@ class TicketGrantingServer(UDPWebNode):
     def recv_auth_and_tgt(self):
         data, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
         data_dict = json.loads(data.decode("utf-8"))
-        requested_service = data_dict["service_id"]
+        self._requested_service = data_dict["service_id"]
 
-        if requested_service not in self._services:
-            print(f"TGS: No such service: {requested_service}!")
+        if self._requested_service not in self._services:
+            print(f"TGS: No such service: {self._requested_service}!")
             exit(1)
 
         tgt_encrypted = common.string_to_bytes(data_dict["ticket_granting_ticket"])
@@ -84,15 +88,17 @@ class TicketGrantingServer(UDPWebNode):
         tgt_decrypted = common.delete_trailing_zeros(encryptor.encrypt(bytearray(tgt_encrypted), True)).decode("utf-8")
         tgt_decrypted_dict = json.loads(tgt_decrypted)
 
-        tgs_session_key = common.string_to_bytes(tgt_decrypted_dict["tgs_session_key"])
+        self._tgs_session_key = common.string_to_bytes(tgt_decrypted_dict["tgs_session_key"])
         # decrypt auth1
         auth1 = common.string_to_bytes(data_dict["auth1"])
-        encryptor = Des(bytearray(tgs_session_key))
+        encryptor = Des(bytearray(self._tgs_session_key))
         auth1_decrypted = common.delete_trailing_zeros(encryptor.encrypt(bytearray(auth1), True)).decode("utf-8")
         auth1_decrypted_dict = json.loads(auth1_decrypted)
 
         print(tgt_decrypted_dict)
         print(auth1_decrypted_dict)
+
+        self._client_id = auth1_decrypted_dict["client_id"]
 
         if tgt_decrypted_dict["name"] != auth1_decrypted_dict["client_id"]:
             print("TGS: Client names in TGT and auth1 do not match!")
@@ -103,3 +109,28 @@ class TicketGrantingServer(UDPWebNode):
         if tgt_decrypted_dict["timestamp"] + tgt_decrypted_dict["lifetime"] < time():
             print("TGS: The TGT has expired!")
             exit(1)
+
+    def send_service_ticket_and_session_key_to_client(self):
+        service_session_key = common.gen_key()
+        timestamp = time()
+
+        service_ticket = {
+            "client_id": self._client_id,
+            "service_id": self._requested_service,
+            "timestamp": timestamp,
+            "lifetime": 900.0,
+            "service_session_key": common.bytes_to_string(service_session_key)
+        }
+        msg2 = {
+            "service_id": self._requested_service,
+            "timestamp": timestamp,
+            "lifetime": 900.0,
+            "service_session_key": common.bytes_to_string(service_session_key)
+        }
+        encryptor = Des(bytearray(self._service_secret_key))
+        service_ticket_encrypted = encryptor.encrypt(bytearray(json.dumps(service_ticket), "utf-8"))
+        self._send_bytes(service_ticket_encrypted, common.CLIENT_PORT)
+
+        encryptor = Des(bytearray(self._tgs_session_key))
+        msg2_encrypted = encryptor.encrypt(bytearray(json.dumps(msg2), "utf-8"))
+        self._send_bytes(msg2_encrypted, common.CLIENT_PORT)
