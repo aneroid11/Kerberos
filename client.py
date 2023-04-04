@@ -56,5 +56,13 @@ class Client(UDPWebNode):
         self._send_string(json.dumps(data), common.TICKET_GRANTING_SERVER_PORT)
 
     def recv_service_ticket_and_session_key(self):
-        data, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
-        # print(data)
+        service_ticket_encrypted, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
+        msg2_encrypted, _ = self._sock.recvfrom(common.MAX_DATA_LEN)
+
+        encryptor = Des(bytearray(self._tgs_session_key))
+        msg2_decrypted = common.delete_trailing_zeros(encryptor.encrypt(
+            bytearray(msg2_encrypted),
+            True
+        )).decode("utf-8")
+        msg2_dict = json.loads(msg2_decrypted)
+        print(msg2_dict)
