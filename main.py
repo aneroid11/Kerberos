@@ -1,4 +1,6 @@
 from des import Des
+from client import Client
+from server_service import ServerService
 
 
 def main():
@@ -10,7 +12,11 @@ def main():
     # print(msg_encrypted)
     # msg_decrypted = encryptor.encrypt(msg_encrypted, True)
     # print(msg_decrypted)
-    print("hello world")
+    server_service = ServerService()
+    client = Client()
+
+    client.send_data()
+    server_service.receive_data()
 
 
 if __name__ == '__main__':
