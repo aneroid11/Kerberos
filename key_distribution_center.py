@@ -1,16 +1,52 @@
-import socket
+import json
+import sys
+from time import time
 import common
 from udp_web_node import UDPWebNode
+from hashlib import sha256
+from des import Des
 
 
 class AuthServer(UDPWebNode):
     def __init__(self):
         super().__init__()
+        self._tgs_secret_key = common.gen_key()
+        self._login_str = None
+
         self._sock.bind(('', common.AUTH_SERVER_PORT))
+
+        self._clients = {
+            "Anton": sha256("123".encode("utf-8")).digest(),
+            "Maxim": sha256("1234".encode("utf-8")).digest(),
+            "Alexander": sha256("12345".encode("utf-8")).digest()
+        }
 
     def receive_client_login(self):
         login, addr = self._sock.recvfrom(common.MAX_DATA_LEN)
-        print("client login: " + str(login))
+        login_str = login.decode("utf-8")
+        self._login_str = login_str
+        print(f"AS: received client login: {login_str}")
+
+        if login_str not in self._clients.keys():
+            print("AS: ERROR: no client with such login")
+            sys.exit(1)
+
+    def send_ticket_granting_ticket(self):
+        tgs_session_key = common.gen_key()
+
+        # such client exists
+        first_message = {
+            "name": self._login_str,
+            "tgs_name": "TicketGrantingServer",
+            "timestamp": time(),
+            "lifetime": 3600.0,
+            "tgs_session_key": common.bytes_to_string(tgs_session_key)
+        }
+        first_message_str = json.dumps(first_message)
+        tgs_secret_key_encryptor = Des(bytearray(self._tgs_secret_key))
+        first_message_str_encr = tgs_secret_key_encryptor.encrypt(bytearray(first_message_str, "utf-8"))
+        self._send_bytes(first_message_str_encr, common.CLIENT_PORT)
+
 
 class TicketGrantingServer(UDPWebNode):
     def __init__(self):

@@ -9,9 +9,10 @@ class Client(UDPWebNode):
         super().__init__()
         self._sock.bind(('', common.CLIENT_PORT))
 
-    def _send_string(self, string: str, port: int):
-        self._sock.sendto(str.encode(string, "utf-8"), ("localhost", port))
-
     def send_msg_to_auth_server(self):
         login = input("Enter your login: ")
+        print("sending login to AS...")
         self._send_string(login, common.AUTH_SERVER_PORT)
+
+    def receive_ticket_granting_ticket(self):
+        pass
