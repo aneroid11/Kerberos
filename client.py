@@ -36,7 +36,7 @@ class Client(UDPWebNode):
             second_data_str = second_msg_decr.decode("utf-8")
             second_data = json.loads(second_data_str)
         except Exception as e:
-            print("Password is incorrect!")
+            print("C: Password is incorrect!")
             sys.exit(1)
 
         self._tgs_session_key = common.string_to_bytes(second_data["tgs_session_key"])
